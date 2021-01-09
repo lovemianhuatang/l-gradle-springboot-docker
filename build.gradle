@@ -1,0 +1,54 @@
+plugins {
+    id 'org.springframework.boot' version '2.4.1'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    // docker-spring-boot插件
+    id 'com.bmuschko.docker-spring-boot-application' version '6.6.1'
+    id 'java'
+}
+
+group = 'com.codelong'
+version = '1.0.0'
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenLocal() //配置先从本地仓库寻找jar包，优先寻找上一个配置，找到不执行下面的配置
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    mavenCentral()
+
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// docker构建配置
+docker {
+    springBootApplication {
+        baseImage = 'openjdk:8-alpine' // 用于Spring Boot应用程序的Docker基本映像。
+        maintainer = 'codelong' // 镜像维护者
+        ports = [8080] // 暴露的端口
+        // 镜像名称和版本
+        images = ["${project.group}/${rootProject.name}:${project.version}",
+                  "${project.group}/${rootProject.name}:latest"]
+        // 传递给java命令的JVM参数。
+        jvmArgs = ["-Djava.security.egd=file:/dev/./urandom", '-Xmx2048m']
+        // 用于启动应用程序的主类名称。如果您的源代码包含多个主类文件，则为此选项设置一个显式值很有用。
+        // mainClassName = 默认通过扫描类路径发现的唯一主类名称
+    }
+    // 如果url不指定的话
+    // Unix系统默认：unix:///var/run/docker.sock
+    // Windows系统默认：tcp://127.0.0.1:2375。
+    // url = 'https://192.168.3.103:2375'
+}
+
+test {
+    useJUnitPlatform()
+}
